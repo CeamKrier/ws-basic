@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>SocketFun</title>
+		<style>
+			.wrapper {
+				width: 400px;
+				height: 600px;
+				right: 0;
+				left: 0;
+				top: 0;
+				bottom: 0;
+				margin: auto;
+				position: absolute;
+				overflow: scroll;
+				overflow-x: hidden;
+			}
+			.incoming {
+				text-align: left;
+			}
+			.outgoing {
+				text-align: right;
+			}
+			ul {
+				padding-left: unset;
+			}
+			li {
+				list-style: none;
+				margin: 1em;
+			}
+			.inputPanel {
+				bottom: 0;
+				position: absolute;
+				width: 100%;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<ul id="messageContainer"></ul>
+
+			<div class="inputPanel">
+				<input style="width: 84%;" id="textInput" />
+				<button id="sendButton">
+					Send
+				</button>
+			</div>
+		</div>
+
+		<script>
+			const socket = new WebSocket('ws://localhost:4000/');
+			const userID = '_' + Math.random().toString(36).substr(2, 9);
+
+			const handleMessageSend = () => {
+				msg = document.getElementById('textInput').value;
+				msg !== '' &&
+					socket.send(
+						JSON.stringify({
+							from: userID,
+							data: msg,
+						})
+					);
+			};
+
+			document
+				.getElementById('sendButton')
+				.addEventListener('click', handleMessageSend);
+
+			document.getElementById('textInput').addEventListener('keypress', (e) => {
+				if (e.keyCode === 13) {
+					handleMessageSend();
+					document.getElementById('textInput').value = '';
+				}
+			});
+
+			socket.onmessage = (message) => {
+				const msg = JSON.parse(message.data);
+				const li = document.createElement('li');
+				li.innerText = `${msg.from} - ${msg.data}`;
+				msg.from === userID
+					? (li.className = 'outgoing')
+					: (li.className = 'incoming');
+				document.getElementById('messageContainer').appendChild(li);
+			};
+		</script>
+	</body>
+</html>
